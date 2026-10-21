@@ -92,7 +92,7 @@ fun ZenitTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = ZenitColors, typography = ZenitTypography) {
         CompositionLocalProvider(
             LocalContentColor provides Z.Text,
-            LocalTextStyle provides TextStyle(fontFamily = RobotoFlex, color = Z.Text),
+            LocalTextStyle provides TextStyle(fontFamily = RobotoFlex),
             content = content,
         )
     }

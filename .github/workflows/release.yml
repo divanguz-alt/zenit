@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Resolve version
+        id: version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "name=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Decode keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          test -n "$KEYSTORE_B64" || { echo "KEYSTORE_B64 secret is missing"; exit 1; }
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/zenit-release.jks"
+
+      - name: Build signed release APK
+        env:
+          ZENIT_KEYSTORE: ${{ runner.temp }}/zenit-release.jks
+          ZENIT_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          ZENIT_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          ZENIT_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease -PversionName=${{ steps.version.outputs.name }} --stacktrace
+
+      - name: Verify signature and package
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          APK=app/build/outputs/apk/release/app-release.apk
+          "$BT/apksigner" verify --print-certs "$APK"
+          mkdir -p dist
+          cp "$APK" "dist/zenit-${{ steps.version.outputs.tag }}.apk"
+          cd dist
+          sha256sum "zenit-${{ steps.version.outputs.tag }}.apk" > "zenit-${{ steps.version.outputs.tag }}.apk.sha256"
+          cat "zenit-${{ steps.version.outputs.tag }}.apk.sha256"
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          VERSION="${{ steps.version.outputs.name }}"
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { found=1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > dist/NOTES.md
+          if [ ! -s dist/NOTES.md ]; then echo "Release ${VERSION}" > dist/NOTES.md; fi
+          cat dist/NOTES.md
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            "dist/zenit-${{ steps.version.outputs.tag }}.apk" \
+            "dist/zenit-${{ steps.version.outputs.tag }}.apk.sha256" \
+            --title "Zenit ${{ steps.version.outputs.tag }}" \
+            --notes-file dist/NOTES.md \
+            --verify-tag

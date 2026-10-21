@@ -1,0 +1,29 @@
+# Gradle / Android
+.gradle/
+build/
+/app/build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+output-metadata.json
+
+# Signing material never goes into git
+*.jks
+*.keystore
+keystore.properties
+signing/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+.vscode/
+
+# Tools scratch (downloaded raw sources)
+tools/.cache/
+__pycache__/

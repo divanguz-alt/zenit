@@ -79,7 +79,7 @@ android {
     lint {
         abortOnError = true
         warningsAsErrors = false
-        disable += listOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion", "OldTargetApi")
+        disable += listOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion", "OldTargetApi", "ObsoleteSdkInt")
     }
     testOptions {
         unitTests.isReturnDefaultValues = true

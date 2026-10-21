@@ -27,3 +27,4 @@ signing/
 # Tools scratch (downloaded raw sources)
 tools/.cache/
 __pycache__/
+.kotlin/

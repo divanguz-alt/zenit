@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] - 2026-10-22
+
+### Fixed
+- "Check for updates" always asks GitHub instead of reusing an answer cached for up to an hour, so a release published minutes ago shows up straight away. Without a network connection it falls back to the last known answer.
+
 ## [1.2.0] - 2026-10-22
 
 ### Changed

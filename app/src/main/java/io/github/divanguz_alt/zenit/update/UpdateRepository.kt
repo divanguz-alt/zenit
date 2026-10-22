@@ -81,9 +81,15 @@ class UpdateRepository @Inject constructor(
             if (!force && cached != null && now - lastCheck < CACHE_MS) {
                 json.decodeFromString(cached)
             } else {
-                val body = fetchLatest()
-                settings.saveUpdateCache(now, body)
-                json.decodeFromString(body)
+                try {
+                    val body = fetchLatest()
+                    settings.saveUpdateCache(now, body)
+                    json.decodeFromString(body)
+                } catch (e: Exception) {
+                    // Offline or rate-limited: fall back to the last answer we have, if any.
+                    if (cached == null) throw e
+                    json.decodeFromString(cached)
+                }
             }
         } catch (e: Exception) {
             return@withContext UpdateCheck.Failed(e.message ?: "Network error")

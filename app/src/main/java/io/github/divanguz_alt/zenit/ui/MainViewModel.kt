@@ -273,9 +273,10 @@ class MainViewModel @Inject constructor(
     fun checkForUpdates() {
         viewModelScope.launch {
             _update.value = UpdateUiState.Checking
-            _update.value = when (val r = updates.check(force = false)) {
+            // A tap always asks GitHub; the one-hour cache is only for the silent launch check.
+            _update.value = when (val r = updates.check(force = true)) {
                 UpdateCheck.UpToDate -> UpdateUiState.UpToDate.also { _updateBadge.value = false }
-                is UpdateCheck.Available -> UpdateUiState.Available(r.info)
+                is UpdateCheck.Available -> UpdateUiState.Available(r.info).also { _updateBadge.value = true }
                 is UpdateCheck.Failed -> UpdateUiState.Failed(r.message)
             }
         }

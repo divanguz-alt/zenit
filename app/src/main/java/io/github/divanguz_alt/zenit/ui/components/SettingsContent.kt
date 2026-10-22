@@ -76,7 +76,10 @@ fun SettingsContent(
     onLicenses: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        Text("Settings", fontSize = 22.sp, fontWeight = FontWeight.Medium)
+        Column {
+            Text("Settings", fontSize = 22.sp, fontWeight = FontWeight.Medium)
+            Text("Satellites, live on the globe.", fontSize = 13.sp, color = Z.TextSecondary)
+        }
 
         Group("Globe style") {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {

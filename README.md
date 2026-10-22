@@ -1,4 +1,7 @@
-# Zenit
+<p align="center"><img src="docs/icon/zenit-icon-512.png" width="128" alt="Zenit icon"></p>
+<h1 align="center">Zenit</h1>
+
+<p align="center">GNSS satellites, live on a globe. Android.</p>
 
 Real-time GNSS satellite visualisation for Android. Zenit shows your position on a 3D globe together with the navigation satellites your phone is actually tracking. Each satellite sits at its real orbital position, computed with SGP4 from CelesTrak elements.
 
@@ -81,6 +84,20 @@ Run the tests:
 
 The unit tests check the SGP4 port against Vallado's `SGP4-VER.TLE` vectors (666 states, under 1 mm), compare the full orbit chain against python-sgp4 on real GPS elements, and cover coordinate formatting, units, SemVer, satellite matching and NMEA parsing. Compose UI tests cover settings and unit switching.
 
+### App icon
+
+The icon sources live in [`docs/icon/`](docs/icon): SVG layers on a 108×108 dp canvas, plus 512 and 1024 px PNGs. To regenerate the Android adaptive-icon VectorDrawables (background, foreground, monochrome) and the legacy launcher WebPs:
+
+```bash
+python3 tools/svg_to_vector.py docs/icon
+```
+
+To regenerate the repository's social preview image (`docs/social-preview.png`):
+
+```bash
+python3 tools/make_social_preview.py
+```
+
 ### Bundled assets
 
 The land dots, Earth textures and font are committed so the build works offline. To regenerate them from the original sources:
@@ -106,7 +123,7 @@ Release builds are signed in CI. Pushing a `vX.Y.Z` tag runs `.github/workflows/
 1. builds `assembleRelease` with the version taken from the tag;
 2. signs it with the keystore from the repository secrets `KEYSTORE_B64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`;
 3. computes the SHA-256;
-4. publishes a GitHub Release with `zenit-vX.Y.Z.apk`, `zenit-vX.Y.Z.apk.sha256` and the matching `CHANGELOG.md` section as release notes.
+4. publishes a GitHub Release with `zenit-vX.Y.Z.apk`, `zenit-vX.Y.Z.apk.sha256`, `zenit-icon-512.png` (for F-Droid / Obtainium) and the matching `CHANGELOG.md` section as release notes.
 
 To build a signed release locally, point `ZENIT_SIGNING_PROPS` at a `keystore.properties` file kept outside the repository. It needs `storeFile`, `storePassword`, `keyAlias` and `keyPassword`.
 

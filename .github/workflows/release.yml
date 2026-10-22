@@ -70,6 +70,7 @@ jobs:
           gh release create "${{ steps.version.outputs.tag }}" \
             "dist/zenit-${{ steps.version.outputs.tag }}.apk" \
             "dist/zenit-${{ steps.version.outputs.tag }}.apk.sha256" \
+            docs/icon/zenit-icon-512.png \
             --title "Zenit ${{ steps.version.outputs.tag }}" \
             --notes-file dist/NOTES.md \
             --verify-tag

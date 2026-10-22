@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-10-22
+
+### Changed
+- New app icon ("Quarter Earth"): a satellite sending signal waves to your location. Adaptive, round and Material You themed versions.
+
+### Added
+- Splash screen with the new icon.
+- App icon next to the name and version in Settings → About.
+
 ## [1.1.0] - 2026-10-22
 
 ### Added

@@ -111,7 +111,7 @@ class SettingsUiTest {
     @Test fun aboutShowsVersionAndLongPressOpensDebug() {
         setUp()
         rule.onNodeWithText("Orbital data updated 2 h ago").performScrollTo()
-        rule.onNodeWithTag("version").performScrollTo().assertTextContains("1.0.0").performTouchInput { longClick() }
+        rule.onNodeWithTag("version").performScrollTo().assertTextContains("1.0.0", substring = true).performTouchInput { longClick() }
         rule.waitForIdle()
         assertTrue(debugOpened)
         rule.onNodeWithTag("link:GitHub repository").performScrollTo()

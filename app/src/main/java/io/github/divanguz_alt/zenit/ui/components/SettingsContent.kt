@@ -1,6 +1,10 @@
 package io.github.divanguz_alt.zenit.ui.components
 
 import androidx.compose.foundation.Canvas
+import io.github.divanguz_alt.zenit.R
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -129,13 +133,17 @@ fun SettingsContent(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 56.dp)
+                    .heightIn(min = 64.dp)
                     .combinedClickable(onClick = {}, onLongClick = onVersionLongPress)
                     .testTag("version"),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text("Version", fontSize = 16.sp, modifier = Modifier.weight(1f))
-                Text(versionName, fontSize = 14.sp, color = Z.TextSecondary)
+                AppIcon(Modifier.size(40.dp))
+                Spacer(Modifier.width(14.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Zenit", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Text("Version $versionName", fontSize = 13.sp, color = Z.TextSecondary)
+                }
             }
             LinkRow("GitHub repository", "github.com/divanguz-alt/zenit", onOpenGithub)
             LinkRow("Check for updates", if (updateAvailable) "A new version is available" else null, onCheckUpdates, badge = updateAvailable)
@@ -274,5 +282,16 @@ private fun StyleTile(title: String, sub: String, selected: Boolean, modifier: M
         }
         Text(title, fontSize = 14.sp, fontWeight = FontWeight.Medium)
         Text(sub, fontSize = 12.sp, color = Z.TextSecondary, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+/** The launcher icon, drawn from its two adaptive layers and masked to a circle. */
+@Composable
+fun AppIcon(modifier: Modifier = Modifier) {
+    Box(modifier.clip(CircleShape)) {
+        // The layers are 108 dp with the visible icon in the central 72 dp, so scale them up by 1.5.
+        val layer = Modifier.matchParentSize().graphicsLayer(scaleX = 1.5f, scaleY = 1.5f)
+        Image(painterResource(R.drawable.ic_launcher_background), contentDescription = null, modifier = layer)
+        Image(painterResource(R.drawable.ic_launcher_foreground), contentDescription = "Zenit icon", modifier = layer)
     }
 }

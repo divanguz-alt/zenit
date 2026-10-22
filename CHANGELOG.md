@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.2] - 2026-10-22
+
+### Added
+- Tagline under the Settings header: "Satellites, live on the globe."
+
 ## [1.2.1] - 2026-10-22
 
 ### Fixed

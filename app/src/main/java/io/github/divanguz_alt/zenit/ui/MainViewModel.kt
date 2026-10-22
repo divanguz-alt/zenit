@@ -96,9 +96,6 @@ data class DashboardState(
     val magField: String = Format.DASH,
     val declination: String = Format.DASH,
     val magAvailable: Boolean = true,
-    val steps: String = Format.DASH,
-    val stepsAvailable: Boolean = true,
-    val stepsNeedPermission: Boolean = false,
     val headingText: String = Format.DASH,
     val orientation: String = Format.DASH,
     val error: String = Format.DASH,
@@ -158,7 +155,6 @@ class MainViewModel @Inject constructor(
 
     private val _locationAccess = MutableStateFlow(if (gnss.hasPermission()) LocationAccess.GRANTED else LocationAccess.UNKNOWN)
     val locationAccess: StateFlow<LocationAccess> = _locationAccess.asStateFlow()
-    private val stepsPermission = MutableStateFlow(false)
     private val restart = MutableStateFlow(0)
 
     private val _savedFix = MutableStateFlow<SavedFix?>(null)
@@ -169,8 +165,7 @@ class MainViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GnssSnapshot())
 
-    val sensorState: StateFlow<SensorSnapshot> = stepsPermission
-        .flatMapLatest { sensors.updates(includeSteps = it) }
+    val sensorState: StateFlow<SensorSnapshot> = sensors.updates()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SensorSnapshot(sensors.availability))
 
     val catalog: StateFlow<OrbitCatalog> = orbits.catalog
@@ -182,15 +177,13 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private val stepsToday = MutableStateFlow<Long?>(null)
-
     /** Heading in degrees (true or magnetic as configured), at sensor rate (≤ 10 Hz). */
     val heading: StateFlow<Float?> = combine(sensorState, gnssState, settings) { s, g, cfg -> resolveHeading(s, g.location, cfg) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     val dashboard: StateFlow<DashboardState> = combine(
-        gnssState, sensorState, settings, ticker, stepsToday,
-    ) { g, s, cfg, now, steps -> buildDashboard(g, s, cfg, now, steps) }
+        gnssState, sensorState, settings, ticker,
+    ) { g, s, cfg, now -> buildDashboard(g, s, cfg, now) }
         .sample(500)
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DashboardState())
@@ -232,14 +225,6 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
-        viewModelScope.launch {
-            sensorState.map { it.stepsSinceBoot }.collect { sinceBoot ->
-                if (sinceBoot != null) {
-                    val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-                    stepsToday.value = settingsRepo.stepsToday(sinceBoot, today)
-                }
-            }
-        }
         silentUpdateCheck()
     }
 
@@ -247,10 +232,6 @@ class MainViewModel @Inject constructor(
 
     fun onLocationPermission(granted: Boolean) {
         _locationAccess.value = if (granted) LocationAccess.GRANTED else LocationAccess.DENIED
-    }
-
-    fun onStepsPermission(granted: Boolean) {
-        stepsPermission.value = granted
     }
 
     /** Re-register GNSS listeners; the globe returns to the search animation. */
@@ -358,7 +339,7 @@ class MainViewModel @Inject constructor(
         return ((h % 360f) + 360f) % 360f
     }
 
-    private fun buildDashboard(g: GnssSnapshot, s: SensorSnapshot, cfg: AppSettings, now: Long, steps: Long?): DashboardState {
+    private fun buildDashboard(g: GnssSnapshot, s: SensorSnapshot, cfg: AppSettings, now: Long): DashboardState {
         val fix = g.location
         val saved = _savedFix.value
         val lat = fix?.latitude ?: saved?.latitude
@@ -420,9 +401,6 @@ class MainViewModel @Inject constructor(
             },
             declination = decl?.let { Format.declination(it.toDouble()) } ?: Format.DASH,
             magAvailable = av.magnetic,
-            steps = steps?.let { Format.thousands(it) } ?: Format.DASH,
-            stepsAvailable = av.stepCounter,
-            stepsNeedPermission = av.stepCounter && !stepsPermission.value,
             headingText = heading?.let { "${it.roundToInt() % 360}°" } ?: Format.DASH,
             orientation = heading?.let { Format.compassPoint(it.toDouble()) } ?: Format.DASH,
             error = if (locked) fix?.accuracyM?.let { Format.fixed(it.toDouble(), 1) } ?: Format.DASH else Format.DASH,

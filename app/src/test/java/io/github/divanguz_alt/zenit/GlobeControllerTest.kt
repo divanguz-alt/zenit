@@ -60,4 +60,48 @@ class GlobeControllerTest {
         assertEquals(0.5, GlobeController.easeInOutCubic(0.5), 1e-12)
         assertEquals(1.0, GlobeController.easeInOutCubic(1.0), 1e-12)
     }
+
+    @Test fun draggingAwayStopsFollowingAndRecenterReturns() {
+        val c = GlobeController(false)
+        run(c, 0, 3000, locked = true)
+        assertEquals(GlobePhase.LOCKED, c.phase)
+        c.dragStart()
+        // Drag 100 px right on a 300 px globe: about 19° of longitude westwards.
+        c.drag(100f, 0f, 300f, 0.016)
+        c.dragEnd()
+        assertTrue(c.offCenter)
+        assertEquals(15.96 - Math.toDegrees(100.0 / 300.0), c.viewLon, 0.01)
+        // Fling coasts and then stops; the camera must not drift back to the fix on its own.
+        run(c, 3016, 6000, locked = true)
+        val lonAfter = c.viewLon
+        run(c, 6016, 8000, locked = true)
+        assertEquals(lonAfter, c.viewLon, 1e-6)
+        assertTrue(kotlin.math.abs(c.viewLon - 15.96) > 15)
+
+        c.recenter(8016, 45.8, 15.96)
+        assertTrue(!c.offCenter)
+        run(c, 8032, 8016 + GlobeController.RECENTER_MS + 16, locked = true)
+        assertEquals(45.8, c.viewLat, 0.01)
+        assertEquals(15.96, c.viewLon, 0.01)
+        assertEquals(GlobePhase.LOCKED, c.phase)
+    }
+
+    @Test fun latitudeIsClampedAndSearchDragDoesNotMarkOffCenter() {
+        val c = GlobeController(false)
+        c.dragStart()
+        c.drag(0f, 10_000f, 300f, 0.016)
+        c.dragEnd()
+        assertEquals(GlobeController.MAX_LAT, c.viewLat, 1e-9)
+        assertTrue(!c.offCenter)
+    }
+
+    @Test fun lockTurnClearsOffCenter() {
+        val c = GlobeController(false)
+        run(c, 0, 3000, locked = true)
+        c.dragStart(); c.drag(50f, 0f, 300f, 0.016); c.dragEnd()
+        assertTrue(c.offCenter)
+        c.step(3016, 0.016, false, 45.8, 15.96)   // fix lost
+        assertTrue(!c.offCenter)
+        assertEquals(GlobePhase.SEARCH, c.phase)
+    }
 }

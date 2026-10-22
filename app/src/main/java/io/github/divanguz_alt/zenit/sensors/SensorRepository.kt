@@ -24,7 +24,6 @@ data class SensorAvailability(
     val linearAcceleration: Boolean,
     val gyroscope: Boolean,
     val pressure: Boolean,
-    val stepCounter: Boolean,
 )
 
 data class SensorSnapshot(
@@ -44,7 +43,6 @@ data class SensorSnapshot(
     val pressureHpa: Float? = null,
     /** Linear-regression slope over the last 15 minutes, hPa per hour. */
     val pressureTrendHpaPerHour: Float? = null,
-    val stepsSinceBoot: Long? = null,
 )
 
 /** Sensor fusion and filtering. Emits at most [EMIT_INTERVAL_MS] apart (10 Hz). */
@@ -56,7 +54,6 @@ class SensorRepository @Inject constructor(@ApplicationContext context: Context)
     private val linear = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
     private val gyro = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
     private val pressure = sm.getDefaultSensor(Sensor.TYPE_PRESSURE)
-    private val steps = sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
 
     val availability = SensorAvailability(
         rotation = rotation != null,
@@ -64,13 +61,12 @@ class SensorRepository @Inject constructor(@ApplicationContext context: Context)
         linearAcceleration = linear != null,
         gyroscope = gyro != null,
         pressure = pressure != null,
-        stepCounter = steps != null,
     )
 
     /** Pressure history survives collector restarts so the trend stays meaningful. */
     private val pressureTrend = PressureTrend()
 
-    fun updates(includeSteps: Boolean): Flow<SensorSnapshot> = callbackFlow {
+    fun updates(): Flow<SensorSnapshot> = callbackFlow {
         val thread = HandlerThread("zenit-sensors").apply { start() }
         val handler = Handler(thread.looper)
         var snap = SensorSnapshot(availability)
@@ -144,11 +140,6 @@ class SensorRepository @Inject constructor(@ApplicationContext context: Context)
                         pressureTrend.add(SystemClock.elapsedRealtime(), hpa)
                         snap = snap.copy(pressureHpa = hpa, pressureTrendHpaPerHour = pressureTrend.slopePerHour())
                     }
-                    Sensor.TYPE_STEP_COUNTER -> {
-                        snap = snap.copy(stepsSinceBoot = e.values[0].toLong())
-                        maybeEmit(force = true)
-                        return
-                    }
                 }
                 maybeEmit()
             }
@@ -162,7 +153,6 @@ class SensorRepository @Inject constructor(@ApplicationContext context: Context)
         linear?.let { sm.registerListener(listener, it, delay, handler) }
         gyro?.let { sm.registerListener(listener, it, delay, handler) }
         pressure?.let { sm.registerListener(listener, it, SensorManager.SENSOR_DELAY_NORMAL, handler) }
-        if (includeSteps) steps?.let { sm.registerListener(listener, it, SensorManager.SENSOR_DELAY_NORMAL, handler) }
         trySend(snap)
 
         awaitClose {

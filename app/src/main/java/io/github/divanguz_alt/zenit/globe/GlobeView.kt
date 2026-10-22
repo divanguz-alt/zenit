@@ -4,6 +4,12 @@ import android.opengl.GLSurfaceView
 import android.provider.Settings
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
+import kotlin.math.hypot
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -144,6 +150,7 @@ fun Globe(
         Canvas(
             Modifier
                 .fillMaxSize()
+                .pointerInput(controller) { rotateGlobeGestures(camera, controller) }
                 .pointerInput(Unit) { detectTapGestures(onTap = { onTap() }) },
         ) {
             val f = frame ?: return@Canvas
@@ -156,5 +163,41 @@ fun Globe(
                 onIssInfo(info)
             }
         }
+    }
+}
+
+/**
+ * Drag to rotate the globe. Only touches that start on (or just around) the globe are taken, so
+ * the page still scrolls when the finger lands on the empty space beside it.
+ */
+private suspend fun PointerInputScope.rotateGlobeGestures(camera: GlobeCamera, controller: GlobeController) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false)
+        val f = camera.frame ?: return@awaitEachGesture
+        val dist = hypot(down.position.x - f.centerX, down.position.y - f.centerY)
+        if (dist > f.radiusPx * 1.15f) return@awaitEachGesture
+        var dragging = false
+        var travelled = Offset.Zero
+        var lastTime = down.uptimeMillis
+        while (true) {
+            val event = awaitPointerEvent()
+            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+            if (!change.pressed) break
+            val delta = change.positionChange()
+            if (!dragging) {
+                travelled += delta
+                if (travelled.getDistance() > viewConfiguration.touchSlop) {
+                    dragging = true
+                    controller.dragStart()
+                }
+            }
+            if (dragging) {
+                val radius = camera.frame?.radiusPx ?: f.radiusPx
+                controller.drag(delta.x, delta.y, radius, (change.uptimeMillis - lastTime) / 1000.0)
+                change.consume()
+            }
+            lastTime = change.uptimeMillis
+        }
+        if (dragging) controller.dragEnd()
     }
 }

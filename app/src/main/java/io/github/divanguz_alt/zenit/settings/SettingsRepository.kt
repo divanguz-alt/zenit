@@ -67,9 +67,6 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
         val fixAlt = doublePreferencesKey("fix_alt")
         val fixTime = longPreferencesKey("fix_time")
 
-        val stepsDay = stringPreferencesKey("steps_day")
-        val stepsOffset = longPreferencesKey("steps_offset")
-
         val locationRationaleShown = booleanPreferencesKey("location_rationale_shown")
         val lastUpdateCheck = longPreferencesKey("last_update_check")
         val updateCacheJson = stringPreferencesKey("update_cache_json")
@@ -136,31 +133,6 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
             fix.altitudeMslM?.let { p[K.fixAlt] = it } ?: p.remove(K.fixAlt)
             p[K.fixTime] = fix.timeMillis
         }
-    }
-
-    // --- Steps: daily offset over the since-boot counter ---------------------------------------
-
-    /** Returns today's step count, rebasing the stored offset on a new day or after a reboot. */
-    suspend fun stepsToday(sinceBoot: Long, today: String): Long {
-        var result = 0L
-        store.edit { p ->
-            val day = p[K.stepsDay]
-            val offset = p[K.stepsOffset]
-            when {
-                day != today || offset == null -> {
-                    p[K.stepsDay] = today
-                    p[K.stepsOffset] = sinceBoot
-                    result = 0L
-                }
-                sinceBoot < offset -> {
-                    // Device rebooted today: the counter restarted from zero.
-                    p[K.stepsOffset] = 0L
-                    result = sinceBoot
-                }
-                else -> result = sinceBoot - offset
-            }
-        }
-        return result
     }
 
     // --- Misc flags ----------------------------------------------------------------------------

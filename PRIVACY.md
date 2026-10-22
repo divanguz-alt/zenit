@@ -6,9 +6,9 @@ Zenit has no accounts, analytics, ads or tracking.
 
 Zenit reads your location from the phone's GNSS receiver only to show it on screen and to work out which satellites are above you. Your location is **never sent anywhere**. It stays on the device: the most recent fix is saved locally so the screen can be restored after the app restarts. Zenit does not use background location.
 
-## Sensors and steps
+## Sensors
 
-Compass, motion, pressure and step-counter readings are processed on the device and never leave it. Zenit keeps one number for today's step count, the counter value at the start of the day, so it can show steps taken today.
+Compass, motion and pressure readings are processed on the device and never leave it.
 
 ## Network
 

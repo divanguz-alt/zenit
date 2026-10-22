@@ -29,8 +29,9 @@ Requires **Android 8.0 (API 26) or newer** with OpenGL ES 3.0.
   - *Illustrated*: dot-matrix land generated from Natural Earth, graticule and atmosphere glow.
   - *Realistic*: NASA Blue Marble texture with lighting and an atmospheric rim. An optional real **day/night terminator** uses NASA Black Marble city lights.
 - **Animations** from the design prototype: a spinning search with a scanning sky shell, a shortest-path lock onto your location, staggered satellite reveal, and signal waves from used satellites. The system "Remove animations" setting is respected.
+- **Drag the globe** to spin it around, with momentum. While you look elsewhere the camera stops following you; tap the fix chip (marked ⌖) to fly back to your position.
 - **ISS easter egg**: tap the globe to show the International Space Station at its real SGP4 position, with its orbit, a glowing trail, altitude and speed. Optional time-lapse.
-- **Sensors**: heading (true or magnetic, with optional GPS bearing above 2 km/h), 16-point orientation, pitch/roll, rotation rate, linear acceleration, magnetic field (horizontal/total) with declination, barometric pressure with a 15-minute trend, and today's steps. Missing sensors show "—".
+- **Sensors**: heading (true or magnetic, with optional GPS bearing above 2 km/h), 16-point orientation, pitch/roll, rotation rate, linear acceleration, magnetic field (horizontal/total) with declination and barometric pressure with a 15-minute trend. Missing sensors show "—".
 - **Units**: km/h · mph · kn · m/s, m · ft, hPa · inHg · mmHg.
 - **Display options**: show all constellation satellites, true-scale orbits, signal waves, unused satellites, keep screen on.
 - **Works offline** with the last downloaded orbits and shows how old they are. With no orbital data at all, satellites are placed from the receiver's az/el.
@@ -54,7 +55,6 @@ Zenit downloads the `gps-ops`, `galileo`, `glo-ops`, `beidou` and `sbas` groups,
 | Permission | Why |
 |---|---|
 | `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION` | GNSS fix, satellite status and NMEA. Requested with an explanation first. There is no background location. |
-| `ACTIVITY_RECOGNITION` | Step counter. Requested only when you tap the Steps card. |
 | `INTERNET`, `ACCESS_NETWORK_STATE` | Downloading orbital elements and checking GitHub for updates. |
 | `REQUEST_INSTALL_PACKAGES` | Installing an update you downloaded from inside the app. |
 | `HIGH_SAMPLING_RATE_SENSORS` | Optional: smoother sensor readings on Android 12+. |

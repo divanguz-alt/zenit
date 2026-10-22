@@ -108,18 +108,15 @@ fun MainScreen(vm: MainViewModel) {
     var showLicenses by remember { mutableStateOf(false) }
     var showDebug by remember { mutableStateOf(false) }
     var showLocationRationale by remember { mutableStateOf(false) }
-    var showStepsRationale by remember { mutableStateOf(false) }
     var issShownAt by rememberSaveable { mutableStateOf<Long?>(null) }
     var issInfo by remember { mutableStateOf<IssInfo?>(null) }
 
     // --- Permissions ---------------------------------------------------------------------------
     fun granted(p: String) = ContextCompat.checkSelfPermission(context, p) == PackageManager.PERMISSION_GRANTED
-    fun stepsGranted() = Build.VERSION.SDK_INT < 29 || granted(Manifest.permission.ACTIVITY_RECOGNITION)
 
     val locationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res ->
         vm.onLocationPermission(res[Manifest.permission.ACCESS_FINE_LOCATION] == true)
     }
-    val stepsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> vm.onStepsPermission(ok) }
 
     fun requestLocation() {
         val permanentlyDenied = access == LocationAccess.DENIED && activity != null &&
@@ -134,7 +131,6 @@ fun MainScreen(vm: MainViewModel) {
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         val loc = granted(Manifest.permission.ACCESS_FINE_LOCATION)
         if (loc) vm.onLocationPermission(true) else if (access == LocationAccess.GRANTED) vm.onLocationPermission(false)
-        vm.onStepsPermission(stepsGranted())
     }
     LaunchedEffect(Unit) {
         if (!granted(Manifest.permission.ACCESS_FINE_LOCATION) && vm.shouldShowLocationRationale()) showLocationRationale = true
@@ -187,13 +183,21 @@ fun MainScreen(vm: MainViewModel) {
                 GlobeStatus(
                     d = d,
                     phase = controller.phase,
+                    offCenter = controller.offCenter,
                     access = access,
                     issShown = issShownAt != null,
                     issInfo = issInfo,
                     issAvailable = catalog.iss != null,
                     onReacquire = {
-                        vm.reacquire()
-                        controller.reacquire(System.currentTimeMillis())
+                        val lat = scene.userLat
+                        val lon = scene.userLon
+                        if (controller.offCenter && lat != null && lon != null) {
+                            // Globe was turned away: fly back to the fix instead of re-searching.
+                            controller.recenter(System.currentTimeMillis(), lat, lon)
+                        } else {
+                            vm.reacquire()
+                            controller.reacquire(System.currentTimeMillis())
+                        }
                     },
                     onRequestLocation = ::requestLocation,
                     onOpenLocationSettings = { context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)) },
@@ -230,13 +234,6 @@ fun MainScreen(vm: MainViewModel) {
                             Metric("Pressure", d.pressure, unit = "${d.pressureUnit} ${d.pressureArrow}".trim(), available = d.pressureAvailable, modifier = m, first = true)
                         },
                         { m -> Metric("Mag. field", d.magField, unit = "µT", sub = "decl. ${d.declination}", available = d.magAvailable, modifier = m) },
-                        { m ->
-                            if (d.stepsNeedPermission) {
-                                Metric("Steps", "Enable", sub = "Tap to allow", modifier = m, onClick = { showStepsRationale = true })
-                            } else {
-                                Metric("Steps", d.steps, sub = "today", available = d.stepsAvailable, modifier = m)
-                            }
-                        },
                     ),
                 )
 
@@ -311,18 +308,6 @@ fun MainScreen(vm: MainViewModel) {
             },
         )
     }
-    if (showStepsRationale) {
-        RationaleDialog(
-            title = "Step counter",
-            text = "To show today's steps, Zenit needs the physical activity permission. Steps are counted on the device only.",
-            confirm = "Continue",
-            onConfirm = {
-                showStepsRationale = false
-                if (Build.VERSION.SDK_INT >= 29) stepsLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
-            },
-            onDismiss = { showStepsRationale = false },
-        )
-    }
 }
 
 @Composable
@@ -349,6 +334,7 @@ private fun MenuButton(badge: Boolean, modifier: Modifier, onClick: () -> Unit) 
 private fun GlobeStatus(
     d: DashboardState,
     phase: GlobePhase,
+    offCenter: Boolean,
     access: LocationAccess,
     issShown: Boolean,
     issInfo: IssInfo?,
@@ -364,7 +350,7 @@ private fun GlobeStatus(
     val pillColor = if (locked) Z.Accent else Z.Searching
     val pillText = when {
         noPermission || gpsOff -> "No location"
-        locked -> if (d.fixType == FixType.FIX_2D) "2D Fix" else "3D Fix"
+        locked -> (if (d.fixType == FixType.FIX_2D) "2D Fix" else "3D Fix") + if (offCenter) "  ⌖" else ""
         phase == GlobePhase.LOCKING -> "Locking"
         else -> "Searching"
     }

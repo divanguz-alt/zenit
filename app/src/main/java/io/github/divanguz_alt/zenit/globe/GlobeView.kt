@@ -59,10 +59,17 @@ fun Globe(
     onTap: () -> Unit,
     onIssInfo: (IssInfo?) -> Unit,
     modifier: Modifier = Modifier,
+    camera: GlobeCamera = remember { GlobeCamera() },
+    /**
+     * Area (in this view's pixels) to centre the globe in, e.g. the part of a car screen not covered
+     * by the template. Null uses the phone layout, which leaves room for the caption below.
+     */
+    viewport: androidx.compose.ui.geometry.Rect? = null,
+    /** Radius as a fraction of the shorter viewport side. */
+    radiusFraction: Float = 0.3f,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current.density
-    val camera = remember { GlobeCamera() }
     val painter = remember { GlobeOverlayPainter(context) }
     var glView by remember { mutableStateOf<GLSurfaceView?>(null) }
     var frame by remember { mutableStateOf<GlobeFrame?>(null) }
@@ -72,6 +79,7 @@ fun Globe(
     var scaleK by remember { mutableFloatStateOf(1.0f) }
     val currentScene by rememberUpdatedState(scene)
     val currentVisible by rememberUpdatedState(visible)
+    val currentViewport by rememberUpdatedState(viewport)
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // Frame loop
@@ -94,13 +102,15 @@ fun Globe(
                     val targetK = if (s.trueScale) (1.45f / outer.coerceAtLeast(1.45f)) else 1f
                     scaleK += (targetK - scaleK) * (if (reducedMotion) 1f else (dt * 3).toFloat().coerceIn(0f, 1f))
 
-                    val w = size.width; val h = size.height
-                    val radius = (min(w, h) * 0.3f * controller.zoom.toFloat() * scaleK)
+                    val area = currentViewport
+                    val w = area?.width ?: size.width
+                    val h = area?.height ?: size.height
+                    val radius = (min(w, h) * radiusFraction * controller.zoom.toFloat() * controller.userZoom * scaleK)
                     val f = GlobeFrame(
                         viewLatDeg = controller.viewLat,
                         viewLonDeg = controller.viewLon,
-                        centerX = w / 2f,
-                        centerY = (h - 70 * density) / 2f + 6 * density,
+                        centerX = area?.center?.x ?: (w / 2f),
+                        centerY = area?.center?.y ?: ((h - 70 * density) / 2f + 6 * density),
                         radiusPx = radius,
                         style = s.style,
                         dayNight = s.dayNight,

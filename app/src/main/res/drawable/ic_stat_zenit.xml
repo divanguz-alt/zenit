@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification icon: the monochrome launcher layer at 24 dp (see tools/svg_to_vector.py). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:translateX="18" android:translateY="18">
+        <path android:pathData="M-50,78 a52,52 0 1,0 104,0 a52,52 0 1,0 -104,0 Z" android:fillColor="#FFFFFFFF" />
+        <group>
+            <path android:pathData="M47.58 29.40 A10 10 0 0 1 41.49 23.09" android:strokeColor="#FFFFFFFF" android:strokeWidth="3.4" android:strokeLineCap="round" />
+            <path android:pathData="M45.70 34.57 A15.5 15.5 0 0 1 36.26 24.79" android:strokeColor="#FFFFFFFF" android:strokeWidth="3.4" android:strokeLineCap="round" />
+            <path android:pathData="M43.82 39.74 A21 21 0 0 1 31.03 26.49" android:strokeColor="#FFFFFFFF" android:strokeWidth="3.4" android:strokeLineCap="round" />
+        </group>
+        <group android:translateX="51" android:translateY="20" android:rotation="46">
+            <path android:pathData="M-15.8,-4 h7.6 a1.2,1.2 0 0,1 1.2,1.2 v5.6 a1.2,1.2 0 0,1 -1.2,1.2 h-7.6 a1.2,1.2 0 0,1 -1.2,-1.2 v-5.6 a1.2,1.2 0 0,1 1.2,-1.2 Z" android:fillColor="#FFFFFFFF" />
+            <path android:pathData="M8.2,-4 h7.6 a1.2,1.2 0 0,1 1.2,1.2 v5.6 a1.2,1.2 0 0,1 -1.2,1.2 h-7.6 a1.2,1.2 0 0,1 -1.2,-1.2 v-5.6 a1.2,1.2 0 0,1 1.2,-1.2 Z" android:fillColor="#FFFFFFFF" />
+            <path android:pathData="M-7,-1 h14 v2 h-14 Z" android:fillColor="#FFFFFFFF" />
+            <path android:pathData="M-3,-5 h6 a2,2 0 0,1 2,2 v6 a2,2 0 0,1 -2,2 h-6 a2,2 0 0,1 -2,-2 v-6 a2,2 0 0,1 2,-2 Z" android:fillColor="#FFFFFFFF" />
+        </group>
+    </group>
+</vector>

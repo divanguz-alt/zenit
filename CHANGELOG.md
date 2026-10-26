@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-10-26
+
+### Added
+- Android Auto: the globe with your satellites, signal waves and the ISS on the car screen, plus a card with fix, satellite count, accuracy, speed and altitude. Recenter, ISS and globe-style buttons; drag, pinch or +/− to rotate and zoom. Needs "Unknown sources" in Android Auto developer settings, see the README.
+- Foreground location service while Zenit is open in the car, so GPS keeps working with the phone locked.
+
 ## [1.2.2] - 2026-10-22
 
 ### Added

@@ -86,6 +86,25 @@ class GlobeController(private val reducedMotion: Boolean) {
         }
     }
 
+    /** Extra zoom set by the user (pinch / zoom buttons), on top of the animated [zoom]. */
+    var userZoom = 1f
+        private set
+
+    fun zoomBy(factor: Float) {
+        userZoom = (userZoom * factor).coerceIn(MIN_USER_ZOOM, MAX_USER_ZOOM)
+    }
+
+    /**
+     * Release with a velocity in px/s (e.g. a fling reported by the car host). Coasts like a
+     * finger fling would.
+     */
+    fun fling(vxPx: Float, vyPx: Float, radiusPx: Float) {
+        if (radiusPx <= 0f || reducedMotion) return
+        velLon = -Math.toDegrees(vxPx / radiusPx.toDouble())
+        velLat = Math.toDegrees(vyPx / radiusPx.toDouble())
+        dragging = false
+    }
+
     /** Turn back to the user's fix and resume following it. */
     fun recenter(now: Long, userLat: Double, userLon: Double) {
         velLat = 0.0
@@ -180,6 +199,8 @@ class GlobeController(private val reducedMotion: Boolean) {
         const val RECENTER_MS = 900L
         const val MAX_LAT = 85.0
         const val FLING_DECAY = 3.5
+        const val MIN_USER_ZOOM = 0.6f
+        const val MAX_USER_ZOOM = 2.5f
 
         fun easeInOutCubic(p: Double): Double = if (p < 0.5) 4 * p * p * p else 1 - (-2 * p + 2).pow(3) / 2
 

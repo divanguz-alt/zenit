@@ -4,7 +4,7 @@ Zenit has no accounts, analytics, ads or tracking.
 
 ## Location
 
-Zenit reads your location from the phone's GNSS receiver only to show it on screen and to work out which satellites are above you. Your location is **never sent anywhere**. It stays on the device: the most recent fix is saved locally so the screen can be restored after the app restarts. Zenit does not use background location.
+Zenit reads your location from the phone's GNSS receiver only to show it on screen and to work out which satellites are above you. Your location is **never sent anywhere**. It stays on the device: the most recent fix is saved locally so the screen can be restored after the app restarts. Zenit does not use background location. While Zenit is open on an Android Auto car screen it runs a foreground service, shown as a notification, so GPS keeps working when the phone is locked; it stops when you leave Zenit in the car. Nothing is sent to the car or anywhere else beyond what is drawn on the car screen.
 
 ## Sensors
 

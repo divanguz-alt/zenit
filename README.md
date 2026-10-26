@@ -40,6 +40,33 @@ Requires **Android 8.0 (API 26) or newer** with OpenGL ES 3.0.
 - **Works offline** with the last downloaded orbits and shows how old they are. With no orbital data at all, satellites are placed from the receiver's az/el.
 - **Debug view** (⋮ → long-press the version): predicted vs. measured az/el for each matched satellite.
 
+## Android Auto
+
+Zenit runs on the car screen too: the same globe with your satellites, signal waves and the ISS, plus a card with the fix, satellite count, accuracy, speed and altitude.
+
+- **Recenter**, **ISS** and **Realistic / Illustrated** buttons in the action strip.
+- Drag the globe on a touchscreen (or nudge with the rotary knob in pan mode), pinch or use the **+ / −** buttons to zoom.
+- The globe is centred in the part of the screen that the card never covers.
+
+<p align="center"><img src="docs/android-auto-render.png" width="640" alt="The globe as rendered on a 1280×720 car surface"></p>
+
+<sub>Frame from the instrumented render test, which draws the car surface into an off-screen buffer the same way Android Auto hosts it.</sub>
+
+### Enabling it
+
+Android Auto only lists apps installed from Google Play unless you allow other sources. Zenit is installed from GitHub, so do this once on the phone:
+
+1. Open **Android Auto** settings (Settings → Connected devices → Connection preferences → Android Auto, or the Android Auto app).
+2. Scroll down and tap **Version** ten times, then confirm to enable developer settings.
+3. Open the ⋮ menu → **Developer settings** and turn on **Unknown sources**.
+4. Connect to the car. If Zenit isn't on the launcher, add it under **Customize launcher** in Android Auto settings.
+
+Zenit uses the **phone's** GPS, so give the phone a view of the sky (a dashboard or windscreen holder works best).
+
+While Zenit is open on the car screen it runs a foreground service (with a notification) so GPS keeps working when the phone is locked. It stops as soon as you leave Zenit in the car.
+
+Technically Zenit declares itself as a navigation-category app: that is the only category Android Auto allows to draw its own map, which the globe needs. It doesn't do turn-by-turn navigation, so it couldn't be published on Google Play this way; that's fine for an app installed from GitHub.
+
 ## Data sources and attributions
 
 | Data | Source | License |
@@ -61,6 +88,8 @@ Zenit downloads the `gps-ops`, `galileo`, `glo-ops`, `beidou` and `sbas` groups,
 | `INTERNET`, `ACCESS_NETWORK_STATE` | Downloading orbital elements and checking GitHub for updates. |
 | `REQUEST_INSTALL_PACKAGES` | Installing an update you downloaded from inside the app. |
 | `HIGH_SAMPLING_RATE_SENSORS` | Optional: smoother sensor readings on Android 12+. |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_LOCATION` | Only while Zenit is open in Android Auto: keeps GPS running when the phone is locked. |
+| `androidx.car.app.NAVIGATION_TEMPLATES`, `androidx.car.app.ACCESS_SURFACE` | Android Auto: the map template and the surface the globe is drawn on. |
 
 Your location never leaves the device. See [PRIVACY.md](PRIVACY.md).
 

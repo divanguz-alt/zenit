@@ -72,15 +72,38 @@ class CarSurfaceRenderTest {
             view.attach(SurfaceContainer(reader.surface, w, h, 240))
         }
 
-        // Let the lock animation finish and the satellites fade in.
-        SystemClock.sleep(4_000)
-        val image = reader.acquireLatestImage()
-        val plane = image.planes[0]
-        val rowPadding = plane.rowStride - plane.pixelStride * w
-        val padded = Bitmap.createBitmap(w + rowPadding / plane.pixelStride, h, Bitmap.Config.ARGB_8888)
-        padded.copyPixelsFromBuffer(plane.buffer)
-        image.close()
-        val bmp = Bitmap.createBitmap(padded, 0, 0, w, h)
+        // Wait for the globe to appear (first GL frame can take a while on a busy emulator),
+        // then give the lock animation and satellite fade-in time to finish.
+        val cx = ((viewport.left + viewport.right) / 2).toInt()
+        val cy = h / 2
+        fun litAtCentre(b: Bitmap): Int {
+            var lit = 0
+            for (dx in -120..120 step 8) for (dy in -120..120 step 8) {
+                val c = b.getPixel(cx + dx, cy + dy)
+                if (Color.red(c) + Color.green(c) + Color.blue(c) > 30) lit++
+            }
+            return lit
+        }
+        fun capture(): Bitmap? {
+            val image = reader.acquireLatestImage() ?: return null
+            val plane = image.planes[0]
+            val rowPadding = plane.rowStride - plane.pixelStride * w
+            val padded = Bitmap.createBitmap(w + rowPadding / plane.pixelStride, h, Bitmap.Config.ARGB_8888)
+            padded.copyPixelsFromBuffer(plane.buffer)
+            image.close()
+            return Bitmap.createBitmap(padded, 0, 0, w, h)
+        }
+        val deadline = SystemClock.uptimeMillis() + 15_000
+        var bmp: Bitmap? = null
+        while (SystemClock.uptimeMillis() < deadline) {
+            SystemClock.sleep(500)
+            val frame = capture() ?: continue
+            bmp = frame
+            if (litAtCentre(frame) > 200) break
+        }
+        SystemClock.sleep(3_000)
+        bmp = capture() ?: bmp
+        checkNotNull(bmp) { "no frame was ever rendered" }
 
         val dir = context.getExternalFilesDir(null)!!
         File(dir, "car_render.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -93,13 +116,7 @@ class CarSurfaceRenderTest {
 
         // Globe centred in the viewport: its middle is lit (land dots / ocean gradient), the far
         // left (outside the viewport, beyond the atmosphere) stays black.
-        val cx = ((viewport.left + viewport.right) / 2).toInt()
-        val cy = h / 2
-        var lit = 0
-        for (dx in -120..120 step 8) for (dy in -120..120 step 8) {
-            val c = bmp.getPixel(cx + dx, cy + dy)
-            if (Color.red(c) + Color.green(c) + Color.blue(c) > 30) lit++
-        }
+        val lit = litAtCentre(bmp)
         assertTrue("globe not drawn at the viewport centre (lit=$lit)", lit > 200)
         val corner = bmp.getPixel(10, 10)
         assertTrue("outside the globe should be dark", Color.red(corner) + Color.green(corner) + Color.blue(corner) < 30)

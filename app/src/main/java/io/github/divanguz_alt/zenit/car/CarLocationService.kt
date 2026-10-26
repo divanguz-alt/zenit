@@ -64,6 +64,13 @@ class CarLocationService : Service() {
         private const val NOTIFICATION_ID = 42
 
         fun start(context: Context) {
+            // Without location permission startForeground(type=location) would throw after the
+            // service was already promised to be foreground; don't get that far.
+            if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                return
+            }
             try {
                 ContextCompat.startForegroundService(context, Intent(context, CarLocationService::class.java))
             } catch (e: Exception) {

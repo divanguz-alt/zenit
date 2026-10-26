@@ -61,8 +61,14 @@ class ZenitCarSession(
 ) : Session() {
 
     init {
+        // Keep GPS alive only while Zenit is actually on the car screen: ON_STOP means another car
+        // app (or the host's home) took over, ON_DESTROY only comes when the host unbinds.
         lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onDestroy(owner: LifecycleOwner) = CarLocationService.stop(carContext)
+            override fun onStart(owner: LifecycleOwner) {
+                if (hasLocationPermission(carContext)) CarLocationService.start(carContext)
+            }
+
+            override fun onStop(owner: LifecycleOwner) = CarLocationService.stop(carContext)
         })
     }
 
@@ -70,10 +76,9 @@ class ZenitCarSession(
         if (hasLocationPermission(carContext)) globeScreen() else PermissionScreen(carContext) { globeScreen() }
 
     private fun globeScreen(): Screen {
-        // In the car the app isn't "foreground" for location; a foreground service keeps GNSS alive
-        // while the phone is locked in its holder.
-        CarLocationService.start(carContext)
-        val feed = CarFeed(lifecycleScope, gnss, orbits, settings, derive)
+        // Permission may have just been granted on the phone while the session was visible.
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) CarLocationService.start(carContext)
+        val feed = CarFeed(lifecycleScope, lifecycle, gnss, orbits, settings, derive)
         return GlobeCarScreen(carContext, feed, settings)
     }
 

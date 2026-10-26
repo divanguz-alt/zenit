@@ -11,6 +11,8 @@ import io.github.divanguz_alt.zenit.settings.SavedFix
 import io.github.divanguz_alt.zenit.settings.SettingsRepository
 import io.github.divanguz_alt.zenit.ui.DashboardState
 import io.github.divanguz_alt.zenit.ui.Derivations
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -29,6 +31,7 @@ import kotlinx.coroutines.launch
  */
 class CarFeed(
     scope: CoroutineScope,
+    lifecycle: Lifecycle,
     gnss: GnssRepository,
     orbits: OrbitRepository,
     settingsRepo: SettingsRepository,
@@ -37,16 +40,19 @@ class CarFeed(
     private val savedFix = MutableStateFlow<SavedFix?>(null)
     private val noSensors = SensorSnapshot(SensorAvailability(false, false, false, false, false))
 
+    // GNSS listening and the once-a-second orbit propagation pause while Zenit isn't on the car screen.
     private val ticker = flow {
         while (true) {
             emit(System.currentTimeMillis())
             delay(1_000)
         }
-    }
+    }.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
 
     val settings: StateFlow<AppSettings> = settingsRepo.settings.stateIn(scope, SharingStarted.Eagerly, AppSettings())
 
-    val gnssState: StateFlow<GnssSnapshot> = gnss.updates().stateIn(scope, SharingStarted.Eagerly, GnssSnapshot())
+    val gnssState: StateFlow<GnssSnapshot> = gnss.updates()
+        .flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
+        .stateIn(scope, SharingStarted.Eagerly, GnssSnapshot())
 
     val scene: StateFlow<GlobeScene> = combine(gnssState, orbits.catalog, settings, ticker) { g, c, cfg, now ->
         derive.buildScene(g, c, cfg, now, savedFix.value).scene

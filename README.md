@@ -63,7 +63,7 @@ Android Auto only lists apps installed from Google Play unless you allow other s
 
 Zenit uses the **phone's** GPS, so give the phone a view of the sky (a dashboard or windscreen holder works best).
 
-While Zenit is open on the car screen it runs a foreground service (with a notification) so GPS keeps working when the phone is locked. It stops as soon as you leave Zenit in the car.
+While Zenit is on the car screen it runs a location foreground service so GPS keeps working when the phone is locked. Android lists it under active apps (and as a notification if Zenit is allowed to post notifications). It stops when you switch to another app in the car.
 
 Technically Zenit declares itself as a navigation-category app: that is the only category Android Auto allows to draw its own map, which the globe needs. It doesn't do turn-by-turn navigation, so it couldn't be published on Google Play this way; that's fine for an app installed from GitHub.
 
